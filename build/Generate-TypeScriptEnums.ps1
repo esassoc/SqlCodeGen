@@ -80,48 +80,75 @@ function Parse-MergeStatement {
     }
     $valuesSection = $Matches[1].Trim()
 
-    # Parse each row of values
+    # Parse each row of values using character-by-character parsing
+    # to handle parentheses inside quoted strings
     $rows = @()
-    $pattern = '\(([^)]+)\)'
-    $matches = [regex]::Matches($valuesSection, $pattern)
+    $inString = $false
+    $parenDepth = 0
+    $rowStart = -1
 
-    foreach ($match in $matches) {
-        $rowContent = $match.Groups[1].Value
-        $values = @()
+    for ($i = 0; $i -lt $valuesSection.Length; $i++) {
+        $c = $valuesSection[$i]
 
-        # Parse comma-separated values, respecting quoted strings
-        $inString = $false
-        $current = ""
-
-        for ($i = 0; $i -lt $rowContent.Length; $i++) {
-            $c = $rowContent[$i]
-
-            if ($inString) {
-                if ($c -eq "'") {
-                    # Check for escaped quote ''
-                    if ($i + 1 -lt $rowContent.Length -and $rowContent[$i + 1] -eq "'") {
-                        $current += "'"
-                        $i++
-                        continue
-                    }
-                    $inString = $false
-                } else {
-                    $current += $c
+        if ($inString) {
+            if ($c -eq "'") {
+                # Check for escaped quote ''
+                if ($i + 1 -lt $valuesSection.Length -and $valuesSection[$i + 1] -eq "'") {
+                    $i++
+                    continue
                 }
-            } else {
-                if ($c -eq "'") {
-                    $inString = $true
-                } elseif ($c -eq ",") {
-                    $values += $current.Trim()
+                $inString = $false
+            }
+        } else {
+            if ($c -eq "'") {
+                $inString = $true
+            } elseif ($c -eq "(") {
+                if ($parenDepth -eq 0) {
+                    $rowStart = $i + 1
+                }
+                $parenDepth++
+            } elseif ($c -eq ")") {
+                $parenDepth--
+                if ($parenDepth -eq 0 -and $rowStart -ge 0) {
+                    $rowContent = $valuesSection.Substring($rowStart, $i - $rowStart)
+
+                    # Parse comma-separated values, respecting quoted strings
+                    $values = @()
+                    $inStringVal = $false
                     $current = ""
-                } elseif (-not [char]::IsWhiteSpace($c)) {
-                    $current += $c
+
+                    for ($j = 0; $j -lt $rowContent.Length; $j++) {
+                        $ch = $rowContent[$j]
+
+                        if ($inStringVal) {
+                            if ($ch -eq "'") {
+                                # Check for escaped quote ''
+                                if ($j + 1 -lt $rowContent.Length -and $rowContent[$j + 1] -eq "'") {
+                                    $current += "'"
+                                    $j++
+                                    continue
+                                }
+                                $inStringVal = $false
+                            } else {
+                                $current += $ch
+                            }
+                        } else {
+                            if ($ch -eq "'") {
+                                $inStringVal = $true
+                            } elseif ($ch -eq ",") {
+                                $values += $current.Trim()
+                                $current = ""
+                            } elseif (-not [char]::IsWhiteSpace($ch)) {
+                                $current += $ch
+                            }
+                        }
+                    }
+                    $values += $current.Trim()
+                    $rows += ,@($values)
+                    $rowStart = -1
                 }
             }
         }
-        $values += $current.Trim()
-
-        $rows += ,@($values)
     }
 
     return @{
