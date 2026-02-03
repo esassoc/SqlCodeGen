@@ -18,8 +18,11 @@
     <PropertyGroup>
       <_TsOutputDir>$(MSBuildProjectDirectory)\$(SqlCodeGen_TypeScriptOutputDir)</_TsOutputDir>
       <!-- Capture item paths as properties to avoid batching issues -->
-      <_TableSqlDir>@(SqlCodeGenTableSql->'%(FullPath)')</_TableSqlDir>
-      <_LookupSqlDir>@(SqlCodeGenLookupTableSql->'%(FullPath)')</_LookupSqlDir>
+      <_TableSqlDirRaw>@(SqlCodeGenTableSql->'%(FullPath)')</_TableSqlDirRaw>
+      <_LookupSqlDirRaw>@(SqlCodeGenLookupTableSql->'%(FullPath)')</_LookupSqlDirRaw>
+      <!-- Strip trailing backslashes to prevent PowerShell escape issues -->
+      <_TableSqlDir>$(_TableSqlDirRaw.TrimEnd('\'))</_TableSqlDir>
+      <_LookupSqlDir>$(_LookupSqlDirRaw.TrimEnd('\'))</_LookupSqlDir>
     </PropertyGroup>
 
     <Message Importance="high" Text="SqlCodeGen: Generating TypeScript enums to $(_TsOutputDir)" />
