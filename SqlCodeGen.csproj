@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Source Generator settings -->
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <IsRoslynComponent>true</IsRoslynComponent>
+
+    <!-- NuGet package settings -->
+    <PackageId>SqlCodeGen</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>ESA</Authors>
+    <Description>Roslyn Source Generator for EF Core entity binding classes and TypeScript enums from SQL schema files. Reads SQL CREATE TABLE and MERGE statements directly - no database connection required.</Description>
+    <PackageTags>source-generator;roslyn;ef-core;code-generation;sql;typescript</PackageTags>
+    <RepositoryUrl>https://github.com/esassoc/SqlCodeGen</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- Include generator as analyzer -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <DevelopmentDependency>true</DevelopmentDependency>
+
+    <!-- Suppress analyzer warnings for netstandard2.0 -->
+    <!-- RS1035: Allow file IO for writing generated files to disk (git history preservation) -->
+    <NoWarn>$(NoWarn);NU5128;RS1035</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Pack the generator into the analyzer folder of the NuGet package -->
+  <ItemGroup>
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+  <!-- Include MSBuild props and targets in the package -->
+  <ItemGroup>
+    <None Include="build\SqlCodeGen.props" Pack="true" PackagePath="build\" />
+    <None Include="build\SqlCodeGen.targets" Pack="true" PackagePath="build\" />
+    <None Include="build\Generate-TypeScriptEnums.ps1" Pack="true" PackagePath="build\" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+
+    <!-- Also include in buildTransitive for transitive consumption -->
+    <None Include="build\SqlCodeGen.props" Pack="true" PackagePath="buildTransitive\" />
+    <None Include="build\SqlCodeGen.targets" Pack="true" PackagePath="buildTransitive\" />
+    <None Include="build\Generate-TypeScriptEnums.ps1" Pack="true" PackagePath="buildTransitive\" />
+  </ItemGroup>
+
+</Project>

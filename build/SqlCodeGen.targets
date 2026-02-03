@@ -1,0 +1,56 @@
+<Project>
+  <!--
+    SqlCodeGen MSBuild Targets
+
+    This file handles:
+    1. TypeScript enum generation after C# compilation
+    2. Clean target to remove generated TypeScript files
+  -->
+
+  <!--
+    TypeScript Generation Target
+    Runs after CoreCompile when TypeScript output directory is configured
+  -->
+  <Target Name="SqlCodeGenGenerateTypeScriptEnums"
+          AfterTargets="CoreCompile"
+          Condition="'$(SqlCodeGen_TypeScriptOutputDir)' != '' AND '@(SqlCodeGenLookupTableSql)' != ''">
+
+    <PropertyGroup>
+      <_TsOutputDir>$(MSBuildProjectDirectory)\$(SqlCodeGen_TypeScriptOutputDir)</_TsOutputDir>
+    </PropertyGroup>
+
+    <Message Importance="high" Text="SqlCodeGen: Generating TypeScript enums to $(_TsOutputDir)" />
+
+    <!-- Create the output directory if it doesn't exist -->
+    <MakeDir Directories="$(_TsOutputDir)" Condition="!Exists('$(_TsOutputDir)')" />
+
+    <!-- Generate TypeScript files using PowerShell -->
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)Generate-TypeScriptEnums.ps1&quot; -TableSqlDir &quot;%(SqlCodeGenTableSql.RootDir)%(SqlCodeGenTableSql.Directory)&quot; -LookupSqlDir &quot;%(SqlCodeGenLookupTableSql.RootDir)%(SqlCodeGenLookupTableSql.Directory)&quot; -OutputDir &quot;$(_TsOutputDir)&quot; -ExcludeTables &quot;$(SqlCodeGen_ExcludeTables)&quot;"
+          Condition="'$(OS)' == 'Windows_NT'"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+  </Target>
+
+  <!--
+    Clean Target Extension
+    Removes generated TypeScript files during clean
+  -->
+  <Target Name="SqlCodeGenCleanTypeScriptEnums"
+          AfterTargets="Clean"
+          Condition="'$(SqlCodeGen_TypeScriptOutputDir)' != ''">
+
+    <PropertyGroup>
+      <_TsOutputDir>$(MSBuildProjectDirectory)\$(SqlCodeGen_TypeScriptOutputDir)</_TsOutputDir>
+    </PropertyGroup>
+
+    <!-- Only delete files matching the generated pattern -->
+    <ItemGroup>
+      <_GeneratedTsFiles Include="$(_TsOutputDir)\*-enum.ts" />
+    </ItemGroup>
+
+    <Delete Files="@(_GeneratedTsFiles)" Condition="'@(_GeneratedTsFiles)' != ''" />
+    <Message Importance="normal" Text="SqlCodeGen: Cleaned @(_GeneratedTsFiles->Count()) TypeScript enum files" />
+
+  </Target>
+
+</Project>

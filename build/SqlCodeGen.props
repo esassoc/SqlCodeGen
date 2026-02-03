@@ -1,0 +1,28 @@
+<Project>
+  <!--
+    SqlCodeGen MSBuild Properties
+    These can be overridden in the consuming project.
+  -->
+  <PropertyGroup>
+    <!-- Namespace for generated C# code -->
+    <SqlCodeGen_Namespace Condition="'$(SqlCodeGen_Namespace)' == ''">$(RootNamespace).Entities</SqlCodeGen_Namespace>
+
+    <!-- Output directory for TypeScript enums (relative to project root) -->
+    <SqlCodeGen_TypeScriptOutputDir Condition="'$(SqlCodeGen_TypeScriptOutputDir)' == ''"></SqlCodeGen_TypeScriptOutputDir>
+
+    <!-- Comma-separated list of tables to exclude from generation -->
+    <SqlCodeGen_ExcludeTables Condition="'$(SqlCodeGen_ExcludeTables)' == ''">DatabaseMigration,__RefactorLog,geometry_columns,gt_pk_metadata,spatial_ref_sys</SqlCodeGen_ExcludeTables>
+
+    <!-- Output directory for generated C# files (for git history preservation) -->
+    <SqlCodeGen_OutputDir Condition="'$(SqlCodeGen_OutputDir)' == ''"></SqlCodeGen_OutputDir>
+  </PropertyGroup>
+
+  <!-- Pass properties to the Source Generator via global analyzer config -->
+  <ItemGroup>
+    <CompilerVisibleProperty Include="SqlCodeGen_Namespace" />
+    <CompilerVisibleProperty Include="SqlCodeGen_TypeScriptOutputDir" />
+    <CompilerVisibleProperty Include="SqlCodeGen_ExcludeTables" />
+    <CompilerVisibleProperty Include="SqlCodeGen_OutputDir" />
+    <CompilerVisibleProperty Include="ProjectDir" />
+  </ItemGroup>
+</Project>
