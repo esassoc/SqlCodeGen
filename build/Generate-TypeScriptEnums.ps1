@@ -27,11 +27,11 @@ if ($ExcludeTables) {
 
 # Helper function to convert PascalCase to kebab-case
 function ConvertTo-KebabCase {
-    param([string]$input)
+    param([string]$text)  # Note: Don't use $input - it's a reserved PowerShell variable
 
     $result = ""
-    for ($i = 0; $i -lt $input.Length; $i++) {
-        $c = $input[$i]
+    for ($i = 0; $i -lt $text.Length; $i++) {
+        $c = $text[$i]
         if ([char]::IsUpper($c)) {
             if ($i -gt 0) {
                 $result += "-"
