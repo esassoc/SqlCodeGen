@@ -17,6 +17,9 @@
 
     <PropertyGroup>
       <_TsOutputDir>$(MSBuildProjectDirectory)\$(SqlCodeGen_TypeScriptOutputDir)</_TsOutputDir>
+      <!-- Capture item paths as properties to avoid batching issues -->
+      <_TableSqlDir>@(SqlCodeGenTableSql->'%(FullPath)')</_TableSqlDir>
+      <_LookupSqlDir>@(SqlCodeGenLookupTableSql->'%(FullPath)')</_LookupSqlDir>
     </PropertyGroup>
 
     <Message Importance="high" Text="SqlCodeGen: Generating TypeScript enums to $(_TsOutputDir)" />
@@ -25,7 +28,7 @@
     <MakeDir Directories="$(_TsOutputDir)" Condition="!Exists('$(_TsOutputDir)')" />
 
     <!-- Generate TypeScript files using PowerShell -->
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)Generate-TypeScriptEnums.ps1&quot; -TableSqlDir &quot;%(SqlCodeGenTableSql.RootDir)%(SqlCodeGenTableSql.Directory)&quot; -LookupSqlDir &quot;%(SqlCodeGenLookupTableSql.RootDir)%(SqlCodeGenLookupTableSql.Directory)&quot; -OutputDir &quot;$(_TsOutputDir)&quot; -ExcludeTables &quot;$(SqlCodeGen_ExcludeTables)&quot;"
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)Generate-TypeScriptEnums.ps1&quot; -TableSqlDir &quot;$(_TableSqlDir)&quot; -LookupSqlDir &quot;$(_LookupSqlDir)&quot; -OutputDir &quot;$(_TsOutputDir)&quot; -ExcludeTables &quot;$(SqlCodeGen_ExcludeTables)&quot;"
           Condition="'$(OS)' == 'Windows_NT'"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
 
