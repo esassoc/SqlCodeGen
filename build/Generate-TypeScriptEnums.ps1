@@ -57,6 +57,17 @@ function Get-PluralName {
     return $name + "s"
 }
 
+# Helper function to make valid TypeScript identifier
+function Get-ValidIdentifier {
+    param([string]$name)
+
+    # TypeScript identifiers can't start with a digit - prefix with underscore
+    if ($name -match '^\d') {
+        return "_$name"
+    }
+    return $name
+}
+
 # Parse MERGE statement to get lookup data
 function Parse-MergeStatement {
     param([string]$sql)
@@ -224,7 +235,8 @@ function Generate-TypeScriptEnum {
     foreach ($row in $rows) {
         $id = $row[$idColIndex]
         $name = $row[$nameColIndex]
-        [void]$sb.AppendLine("  $name = $id,")
+        $enumName = Get-ValidIdentifier $name
+        [void]$sb.AppendLine("  $enumName = $id,")
     }
     [void]$sb.AppendLine("}")
     [void]$sb.AppendLine("")
