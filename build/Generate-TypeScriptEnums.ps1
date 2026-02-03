@@ -134,6 +134,10 @@ function Parse-MergeStatement {
                             }
                         } else {
                             if ($ch -eq "'") {
+                                # Check for N'string' Unicode prefix - remove trailing N
+                                if ($current -match 'N$') {
+                                    $current = $current.Substring(0, $current.Length - 1)
+                                }
                                 $inStringVal = $true
                             } elseif ($ch -eq ",") {
                                 $values += $current.Trim()
