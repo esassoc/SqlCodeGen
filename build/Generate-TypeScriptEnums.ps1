@@ -63,8 +63,17 @@ function Get-ValidIdentifier {
 
     $result = $name
 
-    # Remove parentheses and their contents: "Word (DOCX)" -> "Word"
-    $result = $result -replace '\s*\([^)]*\)', ''
+    # Extract and append parenthetical content: "Word (DOCX)" -> "WordDOCX"
+    # This preserves uniqueness when the base name is the same
+    if ($result -match '\(([^)]+)\)') {
+        $parenContent = $Matches[1]
+        # Remove the parentheses and surrounding space from original
+        $result = $result -replace '\s*\([^)]*\)', ''
+        # Append the cleaned parenthetical content
+        $parenContent = $parenContent -replace '\s+', ''
+        $parenContent = $parenContent -replace '-', '_'
+        $result = $result + $parenContent
+    }
 
     # Remove spaces: "Land Bank Acquisition" -> "LandBankAcquisition"
     $result = $result -replace '\s+', ''
