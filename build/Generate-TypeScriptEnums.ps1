@@ -61,11 +61,23 @@ function Get-PluralName {
 function Get-ValidIdentifier {
     param([string]$name)
 
+    $result = $name
+
+    # Remove parentheses and their contents: "Word (DOCX)" -> "Word"
+    $result = $result -replace '\s*\([^)]*\)', ''
+
+    # Remove spaces: "Land Bank Acquisition" -> "LandBankAcquisition"
+    $result = $result -replace '\s+', ''
+
+    # Replace hyphens with underscores: "X-PNG" -> "X_PNG"
+    $result = $result -replace '-', '_'
+
     # TypeScript identifiers can't start with a digit - prefix with underscore
-    if ($name -match '^\d') {
-        return "_$name"
+    if ($result -match '^\d') {
+        $result = "_$result"
     }
-    return $name
+
+    return $result
 }
 
 # Parse MERGE statement to get lookup data
