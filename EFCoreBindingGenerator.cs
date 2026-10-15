@@ -188,12 +188,16 @@ public class EFCoreBindingGenerator : IIncrementalGenerator
             Directory.CreateDirectory(outputPath);
             var filePath = Path.Combine(outputPath, fileName);
 
-            // Only write if content has changed to avoid unnecessary rebuilds
+            // Only write if content has changed to avoid unnecessary rebuilds. Line endings are ignored and an
+            // existing file keeps its own: AppendLine emits CRLF on Windows and LF elsewhere, and consumers check
+            // these files out with either, so an exact comparison rewrote every file on the other platform.
             if (File.Exists(filePath))
             {
                 var existingContent = File.ReadAllText(filePath);
-                if (existingContent == content)
+                var lfContent = content.Replace("\r\n", "\n");
+                if (existingContent.Replace("\r\n", "\n") == lfContent)
                     return;
+                content = existingContent.Contains("\r\n") ? lfContent.Replace("\n", "\r\n") : lfContent;
             }
 
             File.WriteAllText(filePath, content);

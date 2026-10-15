@@ -302,6 +302,7 @@ if (-not (Test-Path $OutputDir)) {
 $lookupFiles = Get-ChildItem -Path $LookupSqlDir -Filter "*.sql" -File
 
 $generatedCount = 0
+$unchangedCount = 0
 
 foreach ($file in $lookupFiles) {
     # Extract table name from filename (remove dbo. prefix and .sql suffix)
@@ -329,9 +330,22 @@ foreach ($file in $lookupFiles) {
     $tsFileName = (ConvertTo-KebabCase $tableName) + "-enum.ts"
     $tsFilePath = Join-Path $OutputDir $tsFileName
 
-    Set-Content -Path $tsFilePath -Value $tsContent -Encoding UTF8
+    # Only written when the content changed. Line endings are ignored and an existing file keeps its own, as in
+    # EFCoreBindingGenerator.WriteToOutputDir. Always with a BOM, as Windows PowerShell's Set-Content wrote it,
+    # so pwsh produces the same bytes.
+    $tsContent += [Environment]::NewLine
+    if (Test-Path $tsFilePath) {
+        $existingContent = [System.IO.File]::ReadAllText($tsFilePath)
+        $lfContent = $tsContent -replace "`r`n", "`n"
+        if (($existingContent -replace "`r`n", "`n") -ceq $lfContent) {
+            $unchangedCount++
+            continue
+        }
+        $tsContent = if ($existingContent.Contains("`r`n")) { $lfContent -replace "`n", "`r`n" } else { $lfContent }
+    }
+    [System.IO.File]::WriteAllText($tsFilePath, $tsContent, (New-Object System.Text.UTF8Encoding $true))
 
     $generatedCount++
 }
 
-Write-Host "SqlCodeGen: Generated $generatedCount TypeScript enum files"
+Write-Host "SqlCodeGen: Generated $generatedCount TypeScript enum files ($unchangedCount unchanged)"
