@@ -297,6 +297,9 @@ function Generate-TypeScriptEnum {
 if (-not (Test-Path $OutputDir)) {
     New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 }
+# Absolute, because the [System.IO.File] calls below resolve relative paths against the process's working
+# directory rather than PowerShell's current location.
+$OutputDir = (Resolve-Path -LiteralPath $OutputDir).ProviderPath
 
 # Get all lookup table SQL files
 $lookupFiles = Get-ChildItem -Path $LookupSqlDir -Filter "*.sql" -File
